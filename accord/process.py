@@ -434,12 +434,17 @@ def restore_deployments(process):
 
 
 def handle_arguments():
-    description = (
-        'Add a description'
-    )
+    description = 'Backup or restore your Anaconda Enterprise install'
     parser = argparse.ArgumentParser(description=description)
-    group = parser.add_argument_group('Sync Files', description)
-    group.add_argument(
+    sync_group = parser.add_argument_group(
+        'Sync Files',
+        'Options for file sync between two AE5 installs'
+    )
+    restore_group = parser.add_argument_group(
+        'Restore Cluster',
+        'Restore from backup options'
+    )
+    sync_group.add_argument(
         '-s',
         '--sync',
         required=False,
@@ -451,7 +456,7 @@ def handle_arguments():
             ' restore server. Default value is False'
         )
     )
-    group.add_argument(
+    sync_group.add_argument(
         '-u',
         '--sync-user',
         required=False,
@@ -461,22 +466,22 @@ def handle_arguments():
             ' used to transfer the backup files. Default user is root'
         )
     )
-    group.add_argument(
+    sync_group.add_argument(
         '-n',
         '--sync-node',
         required=False,
         default=None,
-        help='Node to sync the files to after the backup is complete'
+        help=(
+            'Node to sync the files to after the backup is complete. '
+            'Required only if sync is being used to transfer files.'
+        )
     )
     parser.add_argument(
         '-a',
         '--action',
-        required=False,
-        default='backup',
+        required=True,
         choices=['backup', 'restore'],
-        help=(
-            'Action to perform. Default value is backup'
-        )
+        help='Action to perform on the cluster.'
     )
     parser.add_argument(
         '-d',
@@ -488,7 +493,7 @@ def handle_arguments():
             'Default path is /opt/anaconda_backup'
         )
     )
-    parser.add_argument(
+    restore_group.add_argument(
         '--override',
         required=False,
         default=False,
@@ -498,27 +503,31 @@ def handle_arguments():
             'restore anyway. Default is False'
         )
     )
-    parser.add_argument(
+    restore_group.add_argument(
         '--no-config',
         required=False,
         default=False,
         action='store_true',
-        help='Do not restore the config files to the system'
+        help='Do not restore the config files to the system. Default is False'
     )
     parser.add_argument(
         '--repos-only',
         required=False,
         default=False,
         action='store_true',
-        help='Sync and backup repositories only'
+        help=(
+            'Sync and backup repositories only. Requires sync options '
+            'as arguments'
+        )
     )
-    parser.add_argument(
+    restore_group.add_argument(
         '--start-deployments',
         required=False,
         default=False,
         action='store_true',
         help=(
-            'Start up deployments that are running on the master system'
+            'Not Implemented: Start up deployments that are running on '
+            'the restore destination'
         )
     )
     args = parser.parse_args()
