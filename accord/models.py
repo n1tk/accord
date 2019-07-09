@@ -58,6 +58,11 @@ class Accord(object):
             self.signal_file = 'restore'
 
         # Sync settings
+        self.repos_only = args.repos_only
+        if self.repos_only:
+            # If only doing the repos then assume sync
+            self.sync_files = True
+
         if self.action == 'restore':
             self.sync_files = False
             self.override = args.override
@@ -111,7 +116,6 @@ class Accord(object):
         self.to_start = []
 
         self.no_config = args.no_config
-        self.repos_only = args.repos_only
 
         self.namespace = 'default'
         self.postgres_pod = None
