@@ -5,7 +5,7 @@ import sys
 
 
 requirements = ['sh', 'pyyaml']
-test_requirements = ['mock', 'nose', 'flake8']
+test_requirements = ['mock', 'flake8', 'pytest', 'pytest-cov']
 
 
 setuptools.setup(
