@@ -3,7 +3,7 @@ Accord
 
 Python package to help facilitate the backup and restore your Anaconda Enterprise 5 install.
 
-##### Setup conda environment and install accord
+#### Setup conda environment and install accord
 ```sh
 # Get miniconda and install it
 curl -O https://repo.anaconda.com/miniconda/Miniconda2-4.6.14-Linux-x86_64.sh
@@ -18,7 +18,7 @@ conda activate python37
 conda install -c aeadmin accord -y
 ```
 
-##### Syncing
+#### Syncing
 For backups you have the option to sync the backup files to another Anaconda Enterprise cluster. In order for the process to work a user is specified to do the sync, and must meet the following criteria.
 - Use must exist on both systems
 - Ability to sudo to root as the specified user without a password
@@ -26,7 +26,7 @@ For backups you have the option to sync the backup files to another Anaconda Ent
 
 **Note:** During the initialization of the backup a test of the connectivity between the two systems will be done in order to confirm that passwordless SSH is working before any backup or sync is attempted. As part of that test the destination directory will be created which is where the restore files will be placed.
 
-##### Backup
+#### Backup
 To backup the system the package will need to be installed on the AE master node in the cluster. The backup does not interfere with the running system, and can be safely done while users are using the system.
 
 **Note:** Any file(s) that has not been saved and committed in a running project will **not** be backed up.
@@ -65,7 +65,7 @@ accord -a backup --repos-only -u <SYNC USER> -n <SYNC NODE>
 
 **Note:** During the backup process a 0 byte file named *restore* is placed in the backup directory. This is checked by the restore process before running the restore.
 
-##### Restore
+#### Restore
 
 To restore the files from a backup on the same cluster or in a DR setup you do the following.
 
