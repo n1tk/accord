@@ -113,7 +113,7 @@ class TestModels(TestCase):
         with mock.patch('accord.models.Accord.check_for_restore'):
             test = models.Accord(self.setup_args_restore_default())
 
-        self.assertEquals(test.action, 'restore')
+        self.assertEqual(test.action, 'restore')
 
     def test_init_class_restore_exception_file(self):
         with mock.patch('accord.models.Accord.check_for_restore') as restore:
@@ -130,8 +130,8 @@ class TestModels(TestCase):
             self.setup_args_restore_default(override=True)
         )
 
-        self.assertEquals(test.override, True)
-        self.assertEquals(test.action, 'restore')
+        self.assertEqual(test.override, True)
+        self.assertEqual(test.action, 'restore')
 
     def test_init_class_backup_sync_user(self):
         with mock.patch('accord.models.Accord.setup_backup_directory'):
@@ -145,9 +145,9 @@ class TestModels(TestCase):
                         )
                     )
 
-        self.assertEquals(test.sync_files, True)
-        self.assertEquals(test.sync_user, 'billdo')
-        self.assertEquals(test.sync_node, '1.2.3.4')
+        self.assertEqual(test.sync_files, True)
+        self.assertEqual(test.sync_user, 'billdo')
+        self.assertEqual(test.sync_node, '1.2.3.4')
 
     def test_init_class_backup_sync_no_node(self):
         with mock.patch('accord.models.Accord.setup_backup_directory'):
@@ -173,7 +173,7 @@ class TestModels(TestCase):
         test_class.signal_file = 'restore'
         check_return = test_class.check_for_restore()
 
-        self.assertEquals(check_return, True)
+        self.assertEqual(check_return, True)
 
     def test_add_restore_file(self):
         with mock.patch('accord.models.Accord.setup_backup_directory'):
@@ -319,7 +319,7 @@ class TestModels(TestCase):
         test_class.namespace = 'test_namespace'
         test_class.get_all_secrets()
 
-        self.assertEquals(
+        self.assertEqual(
             test_class.secret_files,
             expected_output,
             'Returned value is not expected value'
@@ -357,7 +357,7 @@ class TestModels(TestCase):
         except Exception:
             assert False, "Exception occurred"
 
-        self.assertEquals(results, 'Success', 'Did not receive expected value')
+        self.assertEqual(results, 'Success', 'Did not receive expected value')
 
     def test_container_command_success_no_return(self):
         test_class = models.Accord(

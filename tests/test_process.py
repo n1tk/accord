@@ -434,7 +434,7 @@ class TestProcess(TestCase):
                 if line not in process_returns.CM_EXPECTED:
                     cm_diff.append(line)
 
-        self.assertEquals(
+        self.assertEqual(
             cm_diff,
             [],
             'Differences were found in the config map from what is expected'
@@ -446,7 +446,7 @@ class TestProcess(TestCase):
                 if line not in process_returns.SECRECT_EXPECTED:
                     secret_diff.append(line)
 
-        self.assertEquals(
+        self.assertEqual(
             secret_diff,
             [],
             'Differences were found in the secret from what is expected'
@@ -628,7 +628,7 @@ class TestProcess(TestCase):
             ):
                 process.cleanup_postgres_database(test_class)
 
-        self.assertEquals(
+        self.assertEqual(
             len(test_class.to_start),
             1,
             'Incorrect number of deployments'
