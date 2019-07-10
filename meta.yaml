@@ -1,0 +1,41 @@
+# Conda build file for package accord
+# To build: conda build accord
+
+package:
+  name: accord
+  version: '0.1.0'
+
+source:
+  path: .
+
+build:
+  number: 0
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+  entry_points:
+    - accord=accord.process:main
+  noarch: python
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - pyaml
+    - sh
+
+  run:
+    - python >=3.6
+    - pyaml
+    - sh
+
+test:
+  commands:
+    - accord --help
+
+about:
+  home: 'https://github.com/oldarmyc/accord'
+  license: 'Apache License, Version 2.0'
+  license_file: LICENSE
+  license_family: APACHE
+  summary: 'Library to run backup and restore procedures on Anaconda Enterprise 5'
+  description: 'Library to run backup and restore procedures on Anaconda Enterprise 5'
+  dev_url: 'https://github.com/oldarmyc/accord'
