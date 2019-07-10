@@ -6,3 +6,5 @@ __pycache__
 .coverage
 .idea
 bash
+.pytest_cache
+build
