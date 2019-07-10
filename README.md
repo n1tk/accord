@@ -1,9 +1,11 @@
+[![Anaconda-Server Badge](https://anaconda.org/aeadmin/accord/badges/latest_release_date.svg)](https://anaconda.org/aeadmin/accord) &nbsp; [![Anaconda-Server Badge](https://anaconda.org/aeadmin/accord/badges/version.svg)](https://anaconda.org/aeadmin/accord)
+
 Accord
 ======
 
 Use this Python package to help facilitate the backup and restore of your Anaconda Enterprise 5 installation.
 
-To backup the system, you'll need to install the ``accord`` package on the master node of the AE cluster. 
+To backup the system, you'll need to install the ``accord`` package on the master node of the AE cluster.
 
 ### Setup conda environment and install accord
 ```sh
@@ -42,7 +44,7 @@ accord -a backup
 All files being backed up are placed in the ``/opt/anaconda_backup`` directory by default, which includes the following:
 
 - A dump of the Postgres database
-- All Gravity-related files 
+- All Gravity-related files
 - All secrets and config files used in the system (stored in ``[BACKUP_DIRECTORY]/secrets``)
 - The object store, which includes all project data
 
@@ -86,7 +88,7 @@ accord -a restore --repos-only
 accord -a restore --no-config
 ```
 
-**NOTE:** During the backup process, a 0 byte file named ``restore`` is placed in the backup directory. This file signals that a backup was completed, but has not yet been restored. The restore process checks for the presence of this file before running the restore operation. When the restore process has completed, it removes that file from the backup directory. 
+**NOTE:** During the backup process, a 0 byte file named ``restore`` is placed in the backup directory. This file signals that a backup was completed, but has not yet been restored. The restore process checks for the presence of this file before running the restore operation. When the restore process has completed, it removes that file from the backup directory.
 
 If you want to restore again from the same backup files, and the 0 byte ``restore`` file has been removed from the backup directory location, you must pass an ``--override`` flag to run the restore process:
 
