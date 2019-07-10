@@ -385,12 +385,13 @@ def cleanup_postgres_database(process):
 
 
 def restoring_config_files(process):
-    # Restart all the pods after the restore
+    # Restore the platform config file. Due to naming of the CM there is an
+    # extra .yaml on the end
     command_return = process.kubectl(
         'replace',
         '-f',
         f'{process.backup_directory}/secrets/'
-        'anaconda-enterprise-anaconda-platform.yml'
+        'anaconda-enterprise-anaconda-platform.yml.yaml'
     )
     if 'replaced' not in command_return:
         print('ERROR: Could not restore the platform config file')
