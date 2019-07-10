@@ -1,7 +1,9 @@
 Accord
 ======
 
-Python package to help facilitate the backup and restore your Anaconda Enterprise 5 install.
+Use this Python package to help facilitate the backup and restore of your Anaconda Enterprise 5 installation.
+
+To backup the system, you'll need to install the ``accord`` package on the master node of the AE cluster. 
 
 ### Setup conda environment and install accord
 ```sh
@@ -12,86 +14,81 @@ bash Miniconda2-4.6.14-Linux-x86_64.sh  # Accept the license and take the defaul
 # Source bashrc to pick up conda paths
 source ~/.bashrc
 
-# Create profile, and preflight package
+# Create profile, and install package
 conda create -n python37 python=3.7 -y
 conda activate python37
 conda install -c aeadmin accord -y
 ```
 
 ### Syncing
-For backups you have the option to sync the backup files to another Anaconda Enterprise cluster. In order for the process to work a user is specified to do the sync, and must meet the following criteria.
-- Use must exist on both systems
-- Ability to sudo to root as the specified user without a password
-- Can SSH to the destination system with passwordless sudo
+You have the option to sync the backup files to another Anaconda Enterprise cluster. To do so, the user specified to do the sync must meet the following criteria:
+- User must exist on both systems
+- User can sudo to root without a password
+- User can SSH to the destination system with passwordless sudo
 
-**Note:** During the initialization of the backup a test of the connectivity between the two systems will be done in order to confirm that passwordless SSH is working before any backup or sync is attempted. As part of that test the destination directory will be created which is where the restore files will be placed.
+**NOTE:** When performing a backup, connectivity between the two systems will be tested to confirm that passwordless SSH is working before any backup or sync operation is attempted. During that test, the destination directory where the restored files will be placed is also created.
 
 ### Backup
-To backup the system the package will need to be installed on the AE master node in the cluster. The backup does not interfere with the running system, and can be safely done while users are using the system.
+The backup process does not interfere with the running system, and therefore can be performed while others are using the platform.
 
-**Note:** Any file(s) that has not been saved and committed in a running project will **not** be backed up.
+**NOTE:** Any files *in a running project that have not been committed to your version control repository* **will not** be backed up.
 
-Once installed you can run the following command to perform a backup.
+Run the following command to perform a backup:
 
 ```sh
 accord -a backup
 ```
 
-By default this will store all files for the backup in /opt/anaconda_backup directory which includes the following files.
+All files being backed up are placed in the ``/opt/anaconda_backup`` directory by default, which includes the following:
 
-- Postgres dump of the database
-- Gravity backup
-- All secrets and config files used in the system stored in [BACKUP_DIRECTORY]/secrets
-- Object store which includes all project data
+- A dump of the Postgres database
+- All Gravity-related files 
+- All secrets and config files used in the system (stored in ``[BACKUP_DIRECTORY]/secrets``)
+- The object store, which includes all project data
 
-You can change the default backup location by passing the **-d** or **--directory** option in the command followed by the desired path.
+You can change the default backup location by passing the ``-d`` or ``--directory`` option to the command, followed by the desired path. If you use a different backup location, make note of it, as you'll refer to it when restoring the files from backup.
 
-An additional option for backup is to backup **only** the Anaconda Enterprise repositories that have been mirrored from one cluster to another. Instead of mirroring on all installed clusters it is possible to mirror to one AE5 cluster, and then backup/restore the repositories across all AE5 clusters in an environment.
+You can also choose to backup **only** the Anaconda Enterprise repositories that have been mirrored, to move them from one cluster to another. Instead of mirroring on each installed cluster, you can perform the mirror on one AE5 cluster, then backup and restore the repositories across all AE5 clusters in an environment.
 
-To do this you would need to ensure you include the following options in your command line call.
+In this case, include the following options with the ``backup`` command:
 
 ```sh
 accord -a backup --repos-only -u <SYNC USER> -n <SYNC NODE>
 ```
 
-*--repos-only* : Only backup the repository database and sync the repositories on the
-                 running cluster to another cluster
+Where:
 
-*-u* : Username to use for the sync operation. For the sync the user should have
-       passwordless ssh setup in order to complete the rsync of the file.
+* ``--repos-only`` = Backup the repository database only, and sync the repository on the running cluster to another cluster.
 
-*-n* : Node to sync the repositories and database backup to. This would be the AE5
-       master on the target cluster.
+* ``-u`` = The username to use for the sync operation described above. The user must have passwordless ssh setup to successfully sync.
 
-**Note:** During the backup process a 0 byte file named *restore* is placed in the backup directory. This is checked by the restore process before running the restore.
+* ``-n`` = The node to sync the repository and database backup to (i.e., the AE5 master node on the target cluster).
 
 ### Restore
 
-To restore the files from a backup on the same cluster or in a DR setup you do the following.
+Run the following command to restore the backup files from the default directory ``/opt/anaconda_backup``, whether on the same cluster or in a DR setup.
 
 ```sh
 accord -a restore
 ```
 
-This will use the files located in the backup directory that was specified during the backup. Be default this will be in */opt/anaconda_backup* directory.
+If you specified an alternate directory to store the backup files, specify the location to restore the files from using the ``-d`` or ``--directory`` option, followed by directory that was specified during the backup operation.
 
-If you need to change the directory were the backup files are located you can change the location with the *-d* or *--directory* option followed by the desired location
-
-If during the backup you chose to only backup the mirrored repositories, then you need to pass the a repo only option to the restore command accordingly as follows.
+If during the backup you chose to backup only the mirrored repositories, pass the a ``--repdo-only`` option to the restore command:
 
 ```sh
 accord -a restore --repos-only
 ```
 
-During the restore process the platform configuration file is replaced using the backup config map from the source cluster. However if you do not want the platform config file to be replaced during a restore, then you can pass a no config option to the restore command seen in the example below..
+**NOTE:** During the restore process, the platform configuration file is replaced by the config map that was backed up from the source cluster. To prevent the platform config file from being replaced during the restore, pass a ``--no-config`` option to the command:
 
 ```sh
 accord -a restore --no-config
 ```
 
-During a backup a 0 byte file named *restore* is placed in the backup directory. During initialization of the restore process a check is made to ensure that file is there, and it signals that a backup was completed that has not been restored. Once the restore has completed that file is removed from the backup directory location.
+**NOTE:** During the backup process, a 0 byte file named ``restore`` is placed in the backup directory. This file signals that a backup was completed, but has not yet been restored. The restore process checks for the presence of this file before running the restore operation. When the restore process has completed, it removes that file from the backup directory. 
 
-If you would like to do a restore and the 0 byte restore file is not in the backup directory location, you must pass an override flag to run the restore process as seen below.
+If you want to restore again from the same backup files, and the 0 byte ``restore`` file has been removed from the backup directory location, you must pass an ``--override`` flag to run the restore process:
 
 ```sh
 accord -a restore --override
