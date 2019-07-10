@@ -42,7 +42,7 @@ accord -a backup
 All files being backed up are placed in the ``/opt/anaconda_backup`` directory by default, which includes the following:
 
 - A dump of the Postgres database
-- Gravity
+- All Gravity-related files 
 - All secrets and config files used in the system (stored in ``[BACKUP_DIRECTORY]/secrets``)
 - The object store, which includes all project data
 
@@ -60,7 +60,7 @@ Where:
 
 * ``--repos-only`` = Backup the repository database only, and sync the repository on the running cluster to another cluster.
 
-* ``-u`` = The username to use for the sync operation described above. The user must have passwordless ssh setup to successfully ``rsync`` file.
+* ``-u`` = The username to use for the sync operation described above. The user must have passwordless ssh setup to successfully sync.
 
 * ``-n`` = The node to sync the repository and database backup to (i.e., the AE5 master node on the target cluster).
 
@@ -80,15 +80,15 @@ If during the backup you chose to backup only the mirrored repositories, pass th
 accord -a restore --repos-only
 ```
 
-**NOTE:** During the restore process, the platform configuration file is replaced by the config map that was backed up from the source cluster. If you don't want the platform config file to be replaced during the restore, you can pass a ``--no-config`` option to the command:
+**NOTE:** During the restore process, the platform configuration file is replaced by the config map that was backed up from the source cluster. To prevent the platform config file from being replaced during the restore, pass a ``--no-config`` option to the command:
 
 ```sh
 accord -a restore --no-config
 ```
 
-**Note:** During the backup process, a 0 byte file named ``restore`` is placed in the backup directory. This file signals that a backup was completed, but has not been restored. The restore process checks for the presence of this file before running the restore operation described below. When the restore process has completed, it removes that file from the backup directory. 
+**NOTE:** During the backup process, a 0 byte file named ``restore`` is placed in the backup directory. This file signals that a backup was completed, but has not yet been restored. The restore process checks for the presence of this file before running the restore operation. When the restore process has completed, it removes that file from the backup directory. 
 
-If you want to restore the backup files and the 0 byte ``restore`` file is not in the backup directory location, you must pass an ``--override`` flag to run the restore process:
+If you want to restore again from the same backup files, and the 0 byte ``restore`` file has been removed from the backup directory location, you must pass an ``--override`` flag to run the restore process:
 
 ```sh
 accord -a restore --override
