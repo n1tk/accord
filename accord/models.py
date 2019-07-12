@@ -87,6 +87,7 @@ class Accord(object):
             ],
             'default': [
                 'anaconda-enterprise-certs',
+                'anaconda-config-files'
             ]
         }
         # Config maps

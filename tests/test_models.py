@@ -61,7 +61,7 @@ class TestModels(TestCase):
     def test_init_class_backup_default(self):
         expected_secrets = {
             'kube-system': ['cluster-tls'],
-            'default': ['anaconda-enterprise-certs']
+            'default': ['anaconda-enterprise-certs', 'anaconda-config-files']
         }
         expected_cms = {
             'default': ['anaconda-enterprise-anaconda-platform.yml']
@@ -306,6 +306,7 @@ class TestModels(TestCase):
             'kube-system': ['cluster-tls'],
             'default': [
                 'anaconda-enterprise-certs',
+                'anaconda-config-files',
             ],
             'test_namespace': [
                 'anaconda-credentials-user-creds-anaconda-enterprise-3ggji6dp'
