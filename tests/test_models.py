@@ -58,7 +58,8 @@ class TestModels(TestCase):
     def setup_temp_restore_file(self, temp_path):
         open(temp_path, 'a').close()
 
-    def test_init_class_backup_default(self):
+    @mock.patch('sh.Command')
+    def test_init_class_backup_default(self, Command):
         expected_secrets = {
             'kube-system': ['cluster-tls'],
             'default': ['anaconda-enterprise-certs', 'anaconda-config-files']
@@ -109,7 +110,8 @@ class TestModels(TestCase):
         self.assertEqual(test.secret_files, expected_secrets)
         self.assertEqual(test.config_maps, expected_cms)
 
-    def test_init_class_restore_defaults(self):
+    @mock.patch('sh.Command')
+    def test_init_class_restore_defaults(self, Command):
         with mock.patch('accord.models.Accord.check_for_restore'):
             test = models.Accord(self.setup_args_restore_default())
 
@@ -125,7 +127,8 @@ class TestModels(TestCase):
             except Exception:
                 assert False, 'Did not catch the proper exception'
 
-    def test_init_class_restore_force(self):
+    @mock.patch('sh.Command')
+    def test_init_class_restore_force(self, Command):
         test = models.Accord(
             self.setup_args_restore_default(override=True)
         )
@@ -133,7 +136,8 @@ class TestModels(TestCase):
         self.assertEqual(test.override, True)
         self.assertEqual(test.action, 'restore')
 
-    def test_init_class_backup_sync_user(self):
+    @mock.patch('sh.Command')
+    def test_init_class_backup_sync_user(self, Command):
         with mock.patch('accord.models.Accord.setup_backup_directory'):
             with mock.patch('accord.models.Accord.remove_signal_restore_file'):
                 with mock.patch('accord.models.Accord.test_sync_to_backup'):
@@ -164,7 +168,8 @@ class TestModels(TestCase):
                 except Exception:
                     assert False, 'Did not catch expected exception'
 
-    def test_init_class_restore_file_check(self):
+    @mock.patch('sh.Command')
+    def test_init_class_restore_file_check(self, Command):
         self.setup_temp_restore_file('restore')
         test_args = self.setup_args_restore_default(override=True)
         test_class = models.Accord(test_args)
@@ -175,7 +180,8 @@ class TestModels(TestCase):
 
         self.assertEqual(check_return, True)
 
-    def test_add_restore_file(self):
+    @mock.patch('sh.Command')
+    def test_add_restore_file(self, Command):
         with mock.patch('accord.models.Accord.setup_backup_directory'):
             with mock.patch('accord.models.Accord.remove_signal_restore_file'):
                 test_class = models.Accord(self.setup_args_backup_default())
@@ -188,7 +194,8 @@ class TestModels(TestCase):
         else:
             assert False, 'Did not find restore file'
 
-    def test_cleanup_restore_file(self):
+    @mock.patch('sh.Command')
+    def test_cleanup_restore_file(self, Command):
         self.setup_temp_restore_file('restore')
         with mock.patch('accord.models.Accord.setup_backup_directory'):
             with mock.patch('accord.models.Accord.remove_signal_restore_file'):
@@ -223,7 +230,8 @@ class TestModels(TestCase):
                     except Exception:
                         assert False, 'Did not catch proper exception'
 
-    def test_setup_backup_directory(self):
+    @mock.patch('sh.Command')
+    def test_setup_backup_directory(self, Command):
         with mock.patch('accord.models.Accord.setup_backup_directory'):
             with mock.patch('accord.models.Accord.remove_signal_restore_file'):
                 test_class = models.Accord(self.setup_args_backup_default())
@@ -234,7 +242,8 @@ class TestModels(TestCase):
         if not os.path.exists('anaconda_backup'):
             assert False, 'Backup directory was not created'
 
-    def test_setup_backup_directory_restore(self):
+    @mock.patch('sh.Command')
+    def test_setup_backup_directory_restore(self, Command):
         with mock.patch('accord.models.Accord.setup_backup_directory'):
             with mock.patch('accord.models.Accord.remove_signal_restore_file'):
                 with mock.patch('accord.models.Accord.run_su_command'):
@@ -326,7 +335,8 @@ class TestModels(TestCase):
             'Returned value is not expected value'
         )
 
-    def test_container_command_exception(self):
+    @mock.patch('sh.Command')
+    def test_container_command_exception(self, Command):
         test_class = models.Accord(
             self.setup_args_restore_default(override=True)
         )
@@ -341,7 +351,8 @@ class TestModels(TestCase):
             with mock.patch('accord.models.sys.exit'):
                 test_class.run_command_on_container(container, command)
 
-    def test_container_command_success_return(self):
+    @mock.patch('sh.Command')
+    def test_container_command_success_return(self, Command):
         test_class = models.Accord(
             self.setup_args_restore_default(override=True)
         )
@@ -360,7 +371,8 @@ class TestModels(TestCase):
 
         self.assertEqual(results, 'Success', 'Did not receive expected value')
 
-    def test_container_command_success_no_return(self):
+    @mock.patch('sh.Command')
+    def test_container_command_success_no_return(self, Command):
         test_class = models.Accord(
             self.setup_args_restore_default(override=True)
         )
@@ -376,7 +388,8 @@ class TestModels(TestCase):
         except Exception:
             assert False, "Exception occurred"
 
-    def test_su_command_exception(self):
+    @mock.patch('sh.Command')
+    def test_su_command_exception(self, Command):
         test_class = models.Accord(
             self.setup_args_restore_default(override=True)
         )
@@ -391,7 +404,8 @@ class TestModels(TestCase):
             with mock.patch('accord.models.sys.exit'):
                 test_class.run_su_command(container, command)
 
-    def test_su_command_success(self):
+    @mock.patch('sh.Command')
+    def test_su_command_success(self, Command):
         test_class = models.Accord(
             self.setup_args_restore_default(override=True)
         )
@@ -403,7 +417,8 @@ class TestModels(TestCase):
         except Exception:
             assert False, "Exception occurred"
 
-    def test_authenticate_api(self):
+    @mock.patch('sh.Command')
+    def test_authenticate_api(self, Command):
         test_class = models.Accord(
             self.setup_args_restore_default(override=True)
         )
@@ -413,7 +428,8 @@ class TestModels(TestCase):
         except Exception:
             assert False, "Exception occurred"
 
-    def test_launch_deployment(self):
+    @mock.patch('sh.Command')
+    def test_launch_deployment(self, Command):
         test_class = models.Accord(
             self.setup_args_restore_default(override=True)
         )

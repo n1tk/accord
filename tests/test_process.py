@@ -109,8 +109,9 @@ class TestProcess(TestCase):
         if not os.path.isfile('restore'):
             assert False, 'restore file was not added'
 
+    @mock.patch('sh.Command')
     @mock.patch('accord.models.pathlib')
-    def test_main_backup_repos_only(self, mock_pathlib):
+    def test_main_backup_repos_only(self, Command, mock_pathlib):
         with mock.patch(
             'accord.process.argparse.ArgumentParser.parse_args'
         ) as args:
@@ -146,7 +147,8 @@ class TestProcess(TestCase):
         if not os.path.isfile('restore'):
             assert False, 'restore file was not added'
 
-    def test_main_restore_no_config(self):
+    @mock.patch('sh.Command')
+    def test_main_restore_no_config(self, Command):
         self.setup_temp_file('restore')
         with mock.patch(
             'accord.process.argparse.ArgumentParser.parse_args'
@@ -175,7 +177,8 @@ class TestProcess(TestCase):
         if os.path.isfile('restore'):
             assert False, 'restore file was not cleaned up'
 
-    def test_main_restore_start_deployments(self):
+    @mock.patch('sh.Command')
+    def test_main_restore_start_deployments(self, Command):
         self.setup_temp_file('restore')
         with mock.patch(
             'accord.process.argparse.ArgumentParser.parse_args'
@@ -207,7 +210,8 @@ class TestProcess(TestCase):
         if os.path.isfile('restore'):
             assert False, 'restore file was not cleaned up'
 
-    def test_main_restore_repos(self):
+    @mock.patch('sh.Command')
+    def test_main_restore_repos(self, Command):
         self.setup_temp_file('restore')
         with mock.patch('accord.process.Accord.setup_backup_directory'):
             with mock.patch(
@@ -346,7 +350,8 @@ class TestProcess(TestCase):
     @mock.patch('sh.pushd', create=True)
     @mock.patch('sh.tar', create=True)
     @mock.patch('sh.mv', create=True)
-    def test_file_backup(self, pushd, tar, mv):
+    @mock.patch('sh.Command')
+    def test_file_backup(self, pushd, tar, mv, Command):
         test_class = None
         self.setup_temp_file('test_backup.sql')
         with mock.patch('accord.models.Accord.setup_backup_directory'):
@@ -362,7 +367,8 @@ class TestProcess(TestCase):
     @mock.patch('sh.pushd', create=True)
     @mock.patch('sh.tar', create=True)
     @mock.patch('sh.mv', create=True)
-    def test_file_restore(self, pushd, tar, mv):
+    @mock.patch('sh.Command')
+    def test_file_restore(self, pushd, tar, mv, Command):
         self.setup_temp_file('test_backup.sql')
         test_class = models.Accord(
             self.setup_args_restore_default(override=True)
@@ -401,7 +407,8 @@ class TestProcess(TestCase):
             assert False, 'Did not create the secret'
 
     # Sanitize
-    def test_sanitize_secret_cm(self):
+    @mock.patch('sh.Command')
+    def test_sanitize_secret_cm(self, Command):
         test_class = None
         with mock.patch('accord.models.Accord.setup_backup_directory'):
             with mock.patch('accord.models.Accord.remove_signal_restore_file'):
@@ -453,8 +460,9 @@ class TestProcess(TestCase):
         )
 
     # Sync - Files
+    @mock.patch('sh.Command')
     @mock.patch('sh.chown', create=True)
-    def test_sync_files(self, chown):
+    def test_sync_files(self, Command, chown):
         with mock.patch('accord.models.Accord.setup_backup_directory'):
             with mock.patch('accord.models.Accord.remove_signal_restore_file'):
                 with mock.patch('accord.models.Accord.test_sync_to_backup'):
@@ -470,8 +478,9 @@ class TestProcess(TestCase):
             process.sync_files(test_class)
 
     # Sync - Repositories
+    @mock.patch('sh.Command')
     @mock.patch('sh.chown', create=True)
-    def test_sync_repositories(self, chown):
+    def test_sync_repositories(self, Command, chown):
         with mock.patch('accord.models.Accord.setup_backup_directory'):
             with mock.patch('accord.models.Accord.remove_signal_restore_file'):
                 with mock.patch('accord.models.Accord.test_sync_to_backup'):
@@ -493,7 +502,8 @@ class TestProcess(TestCase):
             process.sync_repositories(test_class)
 
     # Scale pod
-    def test_scale_pod_invalid_count(self):
+    @mock.patch('sh.Command')
+    def test_scale_pod_invalid_count(self, Command):
         test_class = models.Accord(
             self.setup_args_restore_default(override=True)
         )
@@ -572,7 +582,9 @@ class TestProcess(TestCase):
     @mock.patch('sh.mkdir', create=True)
     @mock.patch('sh.chown', create=True)
     @mock.patch('sh.chmod', create=True)
-    def test_cleanup_restore_files(self, pushd, tar, rm, mkdir, chown, chmod):
+    @mock.patch('sh.Command')
+    def test_cleanup_restore_files(self, pushd, tar, rm, mkdir, chown,
+                                   chmod, Command):
         test_class = models.Accord(
             self.setup_args_restore_default(override=True)
         )
@@ -611,7 +623,8 @@ class TestProcess(TestCase):
         process.cleanup_sessions_deployments(test_class)
 
     # Cleanup - Database
-    def test_cleanup_postgres_db(self):
+    @mock.patch('sh.Command')
+    def test_cleanup_postgres_db(self, Command):
         mock_response = mock.Mock()
         mock_response.side_effect = [
             '',
@@ -661,7 +674,8 @@ class TestProcess(TestCase):
     # Restore repository database
     @mock.patch('sh.chown', create=True)
     @mock.patch('sh.mv', create=True)
-    def test_restore_repository_db(self, chown, mv):
+    @mock.patch('sh.Command')
+    def test_restore_repository_db(self, chown, mv, Command):
         test_class = models.Accord(
             self.setup_args_restore_default(override=True)
         )
