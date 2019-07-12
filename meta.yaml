@@ -17,7 +17,7 @@ build:
 
 requirements:
   build:
-    - python
+    - python >=3.6
     - setuptools
     - pyaml
     - sh
