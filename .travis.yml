@@ -10,4 +10,4 @@ install:
 before_script:
   - flake8 .
 script:
-  - pytest -v
+  - nosetests -v
