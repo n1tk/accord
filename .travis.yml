@@ -10,4 +10,4 @@ install:
 before_script:
   - flake8 .
 script:
-  - nosetests -v
+  - pytest --cov=accord --cov-report=term-missing
