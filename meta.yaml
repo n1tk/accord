@@ -28,8 +28,16 @@ requirements:
     - sh
 
 test:
+  source_files:
+    - tests/*
+  requires:
+    - pytest
+    - sh
+    - mock
+    - pyaml
   commands:
     - accord --help
+    - pytest
 
 about:
   home: 'https://github.com/oldarmyc/accord'
