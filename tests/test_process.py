@@ -659,7 +659,14 @@ class TestProcess(TestCase):
 
     @mock.patch('sh.Command')
     def test_restore_secrets_success(self, Command):
-        Command().return_value = ''
+        Command().side_effect = [
+            'REPLACE ERROR: (NotFound)',
+            'CREATE ERROR',
+            'REPLACE ERROR: (NotFound)',
+            'CREATE ERROR',
+            'REPLACE ERROR: (NotFound)',
+            'CREATE ERROR'
+        ]
         test_class = models.Accord(
             self.setup_args_restore_default(override=True)
         )
