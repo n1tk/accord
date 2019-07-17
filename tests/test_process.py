@@ -8,6 +8,7 @@ from accord import process
 from accord import models
 
 
+import logging
 import pathlib
 import mock
 import os
@@ -16,12 +17,14 @@ import sh
 
 class TestProcess(TestCase):
     def setUp(self):
+        logging.disable(logging.ERROR)
         self.time_patcher = mock.patch('accord.process.time.sleep')
         self.time_patcher.start()
 
     def tearDown(self):
         self.time_patcher.stop()
-        temp_files = ['restore', 'test_backup.sql']
+        logging.disable(logging.NOTSET)
+        temp_files = ['restore', 'test_backup.sql', 'accord.log']
         for tf in temp_files:
             if os.path.isfile(tf):
                 os.remove(tf)

@@ -1,6 +1,7 @@
 
 from accord.models import Accord
 from accord import exceptions
+from accord import common
 
 
 import argparse
@@ -9,9 +10,13 @@ import pathlib
 import json
 import time
 import yaml
+import glob
 import sys
 import os
 import sh
+
+
+log = common.define_logging_facility()
 
 
 def backup_postgres_database(process):
@@ -29,6 +34,7 @@ def backup_postgres_database(process):
 
     # Check for the file and ensure it is there
     if not os.path.isfile(process.postgres_system_backup_path):
+        log.error('Could not find backup file for postgres')
         raise exceptions.NoPostgresBackup(
             'Could not find backup file for postgres'
         )
@@ -55,6 +61,7 @@ def backup_repository_db(process):
 
     # Check for file path and ensure that it created
     if not os.path.isfile(f'{process.postgres_system_repo_backup_path}'):
+        log.error('Could not find backup file for postgres')
         raise exceptions.NoPostgresBackup(
             'Could not find backup file for postgres'
         )
@@ -223,6 +230,7 @@ def sync_repositories(process):
 
 def scale_postgres_pod(process, pod_number):
     if pod_number not in [1, 0]:
+        log.error('Invalid replica count to scale for postgres')
         raise exceptions.InvalidReplicaCount(
             'Invalid replica count to scale for postgres'
         )
@@ -313,6 +321,10 @@ def restart_pods(process):
                 'NAME'
             )
         except sh.ErrorReturnCode_1:
+            """
+            When sh throws exception it means nothing returned
+            which is what we are waiting for
+            """
             success = True
 
         # Waiting for postgres pod to complete scale
@@ -556,7 +568,7 @@ def main():
     try:
         process = Accord(arguments)
     except exceptions.RestoreSignal:
-        print(
+        log.error(
             'Signal file for restore not found so not performing '
             'restore of AE5'
         )
@@ -565,90 +577,102 @@ def main():
     if process.action == 'backup':
         if process.repos_only:
             # Backup the repository database only
-            print('Backing up repository database')
+            log.info('Backing up repository database')
             backup_repository_db(process)
+
+            if not process.sync_files:
+                """
+                Check option to tar up repos so that I am not forcing a sync
+                to another node and gives options
+                """
+                pass
         else:
             # Backup the full database
-            print('Backing up postgres database')
+            log.info('Backing up postgres database')
             backup_postgres_database(process)
 
             # Backup gravity
-            print('Running gravity backup')
+            log.info('Running gravity backup')
             process.gravity_backup_restore('backup')
 
             # tar up all of the files
-            print('Packaging all of the files with tar')
+            log.info('Packaging all of the files with tar')
             file_backup_restore(process, process.action)
 
             # Backup the secrets
-            print('Backing up all secrets')
+            log.info('Backing up all secrets')
             backup_secrets_config_maps(process)
 
             # Clean all of the secrets
-            print('Sanitizing secrets')
+            log.info('Sanitizing secrets')
             sanitize_secrets_config_maps(process)
 
         # Drop in signal file to indicate good to restore
-        print('Adding signal for restore')
+        log.info('Adding signal for restore')
         process.add_signal_for_restore()
+
+        """
+        Add tar option here to timestamp and consolidate the backup
+        """
 
         # Sync the files if requested
         if process.sync_files:
             # Sync the anaconda repositories
-            print('Syncing up repositories to restore cluster')
+            log.info('Syncing up repositories to restore cluster')
             sync_repositories(process)
             # Sync the backup files
-            print('Syncing all backup files to restore cluster')
+            log.info('Syncing all backup files to restore cluster')
             sync_files(process)
     elif process.action == 'restore':
+
+        """
+        Add option to select a tar file that was backed up or by default
+        it will look at the directory
+        """
+
         if process.repos_only:
             # Restore the repository database only
-            print('Restoring repositories only')
+            log.info('Restoring repositories only')
             restore_repo_db(process)
         else:
             # Cleanup any existing deployments or sessions running
-            print('Cleaning up sessions and deployments')
+            log.info('Cleaning up sessions and deployments')
             cleanup_sessions_deployments(process)
 
             # Scale the postgres pod down to 0 so we can do some work
-            print('Scaling down postgres pod for restore')
+            log.info('Scaling down postgres pod for restore')
             scale_postgres_pod(process, 0)
 
             # Cleanup the existing files and restore the backup
-            print('Cleanup and setup directories for restore')
+            log.info('Cleanup and setup directories for restore')
             cleanup_and_restore_files(process)
 
             # Scale the postgres pod up to 1
-            print('Scaling up postgres pod after restore')
+            log.info('Scaling up postgres pod after restore')
             scale_postgres_pod(process, 1)
 
             # Restore the postgres database
-            print('Restoring postgres database')
+            log.info('Restoring postgres database')
             restore_postgres_database(process)
 
             # Cleanup sessions and deployments
-            print('Cleaning up postgres database')
+            log.info('Cleaning up postgres database')
             cleanup_postgres_database(process)
 
-            if not process.no_config:
-                # Load in anaconda platform file
-                print('Restoring AE5 config file')
-                restoring_config_files(process)
-
-            # Restore the secrets for the cluster
-            print('Restoring secrets')
-            restore_secrets(process)
+            # Restore secrets/configmaps for cluster
+            log.info('Restoring files')
+            restoring_files(process)
 
             # Restart the pods
-            print('Restarting all pods')
+            log.info('Restarting all pods')
             restart_pods(process)
 
             if process.start_deployments:
                 # Restore deployments
-                print('Starting up deployments that should be running')
+                log.info('Starting up deployments that should be running')
                 restore_deployments(process)
 
-        print('Cleaning up restore file')
+        log.info('Cleaning up restore file')
         process.remove_signal_restore_file()
 
 

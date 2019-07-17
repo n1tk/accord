@@ -1,6 +1,6 @@
 
 from accord import exceptions
-
+from accord import common
 
 import subprocess
 import pathlib
@@ -9,6 +9,9 @@ import sys
 import os
 import re
 import sh
+
+
+log = common.define_logging_facility()
 
 
 class Accord(object):
@@ -75,6 +78,7 @@ class Accord(object):
             self.sync_node = args.sync_node
 
             if not self.sync_node:
+                log.error('Node to sync files to not provided')
                 raise exceptions.MissingSyncNode(
                     'Node to rsync files to was not provided. Please provide '
                     'the --sync-node switch with the node name'
@@ -100,6 +104,7 @@ class Accord(object):
         # Running some checks to ensure that things are successful
         if self.action == 'restore' and not self.override:
             if not self.check_for_restore():
+                log.error('Restore signal not found')
                 raise exceptions.RestoreSignal(
                     'Restore signal file not found, closing application'
                 )
@@ -135,6 +140,7 @@ class Accord(object):
         try:
             self.run_su_command(self.sync_user, test_sync_success)
         except Exception as e:
+            log.error('Not able to connect to sync node')
             raise exceptions.UnableToSync(
                 'Not able to connect connect and sudo as rsync user'
                 f' {self.sync_user} to {self.sync_node}: {e}'
@@ -239,7 +245,7 @@ class Accord(object):
                 stdout=subprocess.PIPE
             )
         except Exception as e:
-            print(f'An exception {e} occurred running command: {command}')
+            log.error(f'An exception {e} occurred running command: {command}')
             sys.exit(1)
 
         if return_value:
@@ -255,7 +261,7 @@ class Accord(object):
             formatted_command = shlex.split(command_build)
             subprocess.run(formatted_command)
         except Exception as e:
-            print(f'An exception {e} occurred running command: {command}')
+            log.error(f'An exception {e} occurred running command: {command}')
             sys.exit(1)
 
         return

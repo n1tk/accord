@@ -8,17 +8,21 @@ from accord import models
 
 
 import subprocess
+import logging
 import mock
 import os
 
 
 class TestModels(TestCase):
     def setUp(self):
-        pass
+        logging.disable(logging.ERROR)
 
     def tearDown(self):
-        if os.path.isfile('restore'):
-            os.remove('restore')
+        logging.disable(logging.NOTSET)
+        temp_files = ['restore', 'accord.log']
+        for tf in temp_files:
+            if os.path.isfile(tf):
+                os.remove(tf)
 
         if os.path.exists('anaconda_backup'):
             os.rmdir('anaconda_backup')
