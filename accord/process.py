@@ -131,28 +131,34 @@ def backup_secrets_config_maps(process):
     for namespace, secrets in process.secret_files.items():
         for secret in secrets:
             temp_secret_path = f'{secret_path}/{secret}.yaml'
-            with open(temp_secret_path, 'w') as fs:
-                process.kubectl(
-                    'get',
-                    'secrets',
-                    secret,
-                    f'-n {namespace}',
-                    '-o yaml',
-                    _out=fs
-                )
+            try:
+                with open(temp_secret_path, 'w') as fs:
+                    process.kubectl(
+                        'get',
+                        'secrets',
+                        secret,
+                        f'-n {namespace}',
+                        '-o yaml',
+                        _out=fs
+                    )
+            except sh.ErrorReturnCode_1:
+                log.error(f'Could not backup {secret} as it was not found')
 
     for namespace, config_maps in process.config_maps.items():
         for cm in config_maps:
             temp_cm_path = f'{secret_path}/{cm}.yaml'
-            with open(temp_cm_path, 'w') as fcm:
-                process.kubectl(
-                    'get',
-                    'configmaps',
-                    cm,
-                    f'-n {namespace}',
-                    '-o yaml',
-                    _out=fcm
-                )
+            try:
+                with open(temp_cm_path, 'w') as fcm:
+                    process.kubectl(
+                        'get',
+                        'configmaps',
+                        cm,
+                        f'-n {namespace}',
+                        '-o yaml',
+                        _out=fcm
+                    )
+            except sh.ErrorReturnCode_1:
+                log.error(f'Could not backup {cm} as it was not found')
 
 
 def sanitize_secrets_config_maps(process):
