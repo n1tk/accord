@@ -402,40 +402,32 @@ def cleanup_postgres_database(process):
     return
 
 
-def restoring_config_files(process):
-    # Restore the platform config file. Due to naming of the CM there is an
-    # extra .yaml on the end
-    restore_files = [
-        'anaconda-enterprise-anaconda-platform.yml',
-        'anaconda-enterprise-certs',
-        'anaconda-config-files'
-    ]
+def restoring_files(process):
+    # Grab all of the yaml files that were backed up and replace/create them
+    # within the restore cluster
+    restore_files = glob.glob(f'{process.backup_directory}/secrets/*.yaml')
     for restore in restore_files:
-        replaced = True
-        replace_return = process.kubectl(
-            'replace',
-            '-f',
-            f'{process.backup_directory}/secrets/{restore}.yaml'
-        )
+        if (
+            process.no_config and
+            'anaconda-enterprise-anaconda-platform.yml' in restore
+        ):
+            log.info('Skipping platform config due to passed in option')
+            continue
+
+        restored = True
+        replace_return = process.kubectl('replace', '-f', restore)
         if 'replaced' not in replace_return:
-            replaced = False
-            print(f'ERROR: Could not restore the file {restore}')
+            restored = False
 
-        if not replaced and 'NotFound' in replace_return:
-            create_return = process.kubectl(
-                'create',
-                '-f',
-                f'{process.backup_directory}/secrets/{restore}.yaml'
-            )
-            if 'created' not in create_return:
-                print(f'ERROR: Could not create the file {restore}')
+        if not restored and 'NotFound' in replace_return:
+            create_return = process.kubectl('create', '-f', restore)
+            if 'created' in create_return:
+                restored = True
 
-
-def restore_secrets(process):
-    """
-    This is accomplished when doing the gravity restore. Leaving as a
-    placeholder as a reference.
-    """
+        if restored:
+            log.info(f'File {restore} was succefully restored')
+        else:
+            log.error(f'File {restore} was not restored')
 
 
 def restore_repo_db(process):

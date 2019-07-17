@@ -203,7 +203,7 @@ class TestProcess(TestCase):
                                     'accord.process.cleanup_postgres_database'
                                 ):
                                     with mock.patch(
-                                        'accord.process.restoring_config_files'
+                                        'accord.process.restoring_files'
                                     ):
                                         with mock.patch(
                                             'accord.process.restart_pods'
@@ -397,6 +397,37 @@ class TestProcess(TestCase):
         test_class.backup_directory = '.'
         test_class.secret_files = {'default': ['test-secret']}
         test_class.config_maps = {'default': ['test-cm']}
+        with mock.patch('accord.models.Accord.get_all_secrets'):
+            process.backup_secrets_config_maps(test_class)
+
+        if not os.path.exists('secrets'):
+            assert False, 'Did not automatically create the directory'
+
+        if not os.path.exists('secrets/test-secret.yaml'):
+            assert False, 'Did not create the secret'
+
+        if not os.path.exists('secrets/test-cm.yaml'):
+            assert False, 'Did not create the secret'
+
+    @mock.patch('sh.Command')
+    def test_backup_secrets_cm_failure(self, Command):
+        test_class = None
+        with mock.patch('accord.models.Accord.setup_backup_directory'):
+            with mock.patch('accord.models.Accord.remove_signal_restore_file'):
+                with mock.patch('accord.models.Accord.test_sync_to_backup'):
+                    test_class = models.Accord(
+                        self.setup_args_backup_default()
+                    )
+
+        test_class.backup_directory = '.'
+        test_class.secret_files = {'default': ['test-secret']}
+        test_class.config_maps = {'default': ['test-cm']}
+
+        Command().side_effect = sh.ErrorReturnCode_1(
+            'kubectl',
+            ''.encode('utf-8'),
+            ''.encode('utf-8')
+        )
         with mock.patch('accord.models.Accord.get_all_secrets'):
             process.backup_secrets_config_maps(test_class)
 
@@ -650,36 +681,40 @@ class TestProcess(TestCase):
             'Incorrect number of deployments'
         )
 
-    # Config Files - Restore
     @mock.patch('sh.Command')
-    def test_restore_secrets_failed(self, Command):
-        Command().return_value = ''
-        test_class = models.Accord(
-            self.setup_args_restore_default(override=True)
-        )
+    def test_restore_files(self, Command):
+        class temp_glob:
+            def __init__(self, path):
+                self.path = path
+                self.index = 0
+                self.paths = [
+                    'anaconda-enterprise-anaconda-platform.yml',
+                    'first.yaml',
+                    'second.yaml'
+                ]
 
-        process.restoring_config_files(test_class)
+            def __iter__(self):
+                return self
 
-    @mock.patch('sh.Command')
-    def test_restore_secrets_success(self, Command):
+            def __next__(self):
+                index = self.index
+                if index > 2:
+                    raise StopIteration()
+
+                self.index += 1
+                return self.paths[index]
+
         Command().side_effect = [
             'REPLACE ERROR: (NotFound)',
-            'CREATE ERROR',
-            'REPLACE ERROR: (NotFound)',
-            'CREATE ERROR',
+            'File created',
             'REPLACE ERROR: (NotFound)',
             'CREATE ERROR'
         ]
         test_class = models.Accord(
-            self.setup_args_restore_default(override=True)
+            self.setup_args_restore_default(override=True, no_config=True)
         )
-
-        process.restoring_config_files(test_class)
-
-    # Secrets - Restore
-    def test_restore_secrets(self):
-        """ Not in place yet so leaving as a placeholder """
-        pass
+        with mock.patch('accord.process.glob.glob', side_effect=temp_glob):
+            process.restoring_files(test_class)
 
     # Restore repository database
     @mock.patch('sh.chown', create=True)
