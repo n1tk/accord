@@ -652,6 +652,13 @@ def main():
         if process.restore_file is not None:
             process.extract_tar_archive()
 
+            # After extract check for the restore signle file
+            log.info('Checking for restore signal file')
+            if not process.check_for_restore():
+                raise exceptions.RestoreSignal(
+                    'Restore signal file not found, closing application'
+                )
+
         if process.repos_only:
             # Restore the repository database only
             log.info('Restoring repositories only')

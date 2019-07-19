@@ -112,7 +112,11 @@ class Accord(object):
         }
 
         # Running some checks to ensure that things are successful
-        if self.action == 'restore' and not self.override:
+        if (
+            self.action == 'restore' and not
+            self.override and
+            self.restore_file is None
+        ):
             if not self.check_for_restore():
                 log.error('Restore signal not found')
                 raise exceptions.RestoreSignal(
