@@ -25,6 +25,10 @@ class Accord(object):
         # Action to perform
         self.action = args.action.lower()
 
+        if self.action == 'restore':
+            # Allow user to chose tar archive to restore from
+            self.restore_file = args.restore_file
+
         # Backup file names
         self.var_lib_gravity_backup_name = "var_lib_gravity_backup.tar.gz"
         self.postgres_backup_name = "full_postgres_backup.sql"
