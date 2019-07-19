@@ -304,7 +304,7 @@ class Accord(object):
             )
 
     def extract_tar_archive(self, to_directory='/opt'):
-        if self.backup_directory is not '/opt/anaconda_backup':
+        if self.backup_directory != '/opt/anaconda_backup':
             temp_path = pathlib.Path(self.backup_directory)
             to_directory = temp_path.parent
 
