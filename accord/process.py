@@ -565,6 +565,11 @@ def handle_arguments():
             'the restore destination'
         )
     )
+    restore_group.add_argument(
+        '--restore-file',
+        required=False,
+        help='Specify the tar file to restore.'
+    )
     args = parser.parse_args()
     return args
 
@@ -585,13 +590,6 @@ def main():
             # Backup the repository database only
             log.info('Backing up repository database')
             backup_repository_db(process)
-
-            if not process.sync_files:
-                """
-                Check option to tar up repos so that I am not forcing a sync
-                to another node and gives options
-                """
-                pass
         else:
             # Backup the full database
             log.info('Backing up postgres database')
@@ -617,9 +615,8 @@ def main():
         log.info('Adding signal for restore')
         process.add_signal_for_restore()
 
-        """
-        Add tar option here to timestamp and consolidate the backup
-        """
+        log.info('Creating tar archive for backup')
+        process.create_tar_archive()
 
         # Sync the files if requested
         if process.sync_files:
@@ -629,12 +626,10 @@ def main():
             # Sync the backup files
             log.info('Syncing all backup files to restore cluster')
             sync_files(process)
-    elif process.action == 'restore':
 
-        """
-        Add option to select a tar file that was backed up or by default
-        it will look at the directory
-        """
+    elif process.action == 'restore':
+        if process.restore_file is not None:
+            process.extract_tar_archive()
 
         if process.repos_only:
             # Restore the repository database only
