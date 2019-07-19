@@ -532,6 +532,23 @@ def handle_arguments():
             'Default path is /opt/anaconda_backup'
         )
     )
+    parser.add_argument(
+        '--repos-only',
+        required=False,
+        default=False,
+        action='store_true',
+        help=(
+            'Sync and backup repositories only. Requires sync options '
+            'as arguments'
+        )
+    )
+    parser.add_argument(
+        '--archive',
+        required=False,
+        default=False,
+        action='store_true',
+        help='Create tar archive file that holds all backed up data'
+    )
     restore_group.add_argument(
         '--override',
         required=False,

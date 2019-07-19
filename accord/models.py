@@ -25,6 +25,9 @@ class Accord(object):
         # Action to perform
         self.action = args.action.lower()
 
+        if self.action == 'backup':
+            self.archive = args.archive
+
         if self.action == 'restore':
             # Allow user to chose tar archive to restore from
             self.restore_file = args.restore_file
