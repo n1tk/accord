@@ -2,9 +2,12 @@
 from accord import exceptions
 from accord import common
 
+
 import subprocess
 import pathlib
+import tarfile
 import shlex
+import time
 import sys
 import os
 import re
@@ -265,6 +268,37 @@ class Accord(object):
             sys.exit(1)
 
         return
+
+    def create_tar_archive(self):
+        if self.repos_only:
+            archive_file = (
+                f'repos_db_backup_{time.strftime("%Y%m%d-%H%M")}.tar.gz'
+            )
+        else:
+            archive_file = (
+                f'ae5_backup_{time.strftime("%Y%m%d-%H%M")}.tar.gz'
+            )
+
+        with tarfile.open(
+            f'{self.backup_directory}/{archive_file}', 'w:gz'
+        ) as tar:
+            tar.add(
+                self.backup_directory,
+                arcname=os.path.basename(self.backup_directory)
+            )
+
+        if not tarfile.is_tarfile(f'{self.backup_directory}/{archive_file}'):
+            raise exceptions.NotValidTarfile(
+                'tar archive file was not able to create successfully'
+            )
+
+    def extract_tar_archive(self):
+        if not tarfile.is_tarfile(self.restore_file):
+            raise exceptions.NotValidTarfile(
+                'tar archive file is not a valid tar file'
+            )
+
+        sh.tar('xzvf', self.restore_file)
 
     def authenticate_api(self):
         pass
