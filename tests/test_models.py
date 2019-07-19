@@ -566,7 +566,8 @@ class TestModels(TestCase):
         test_class = models.Accord(
             self.setup_args_restore_default(
                 override=True,
-                restore_file='test.tar.gz'
+                restore_file='test.tar.gz',
+                directory='.'
             )
         )
         try:

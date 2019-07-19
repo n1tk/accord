@@ -304,6 +304,10 @@ class Accord(object):
             )
 
     def extract_tar_archive(self, to_directory='/opt'):
+        if self.backup_directory is not '/opt/anaconda_backup':
+            temp_path = pathlib.Path(self.backup_directory)
+            to_directory = temp_path.parent
+
         if not tarfile.is_tarfile(self.restore_file):
             raise exceptions.NotValidTarfile(
                 'tar archive file is not a valid tar file'
