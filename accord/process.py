@@ -110,7 +110,7 @@ def file_backup_restore(process, action):
             f'{process.backup_directory}/'
         )
     elif action == 'restore':
-        sh.mv(
+        sh.cp(
             f'{process.backup_directory}/{process.storage_backup_name}',
             '/opt/anaconda'
         )
@@ -143,6 +143,9 @@ def backup_secrets_config_maps(process):
                     )
             except sh.ErrorReturnCode_1:
                 log.error(f'Could not backup {secret} as it was not found')
+                raise exceptions.SecretNotFound(
+                    f'{secret} has been removed and cannot be backed up'
+                )
 
     for namespace, config_maps in process.config_maps.items():
         for cm in config_maps:
@@ -159,6 +162,11 @@ def backup_secrets_config_maps(process):
                     )
             except sh.ErrorReturnCode_1:
                 log.error(f'Could not backup {cm} as it was not found')
+                raise exceptions.ConfigMapNotFound(
+                    f'{cm} has been removed and cannot be backed up'
+                )
+
+    return
 
 
 def sanitize_secrets_config_maps(process):

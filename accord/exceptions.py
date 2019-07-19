@@ -16,3 +16,15 @@ class InvalidReplicaCount(Exception):
 
 class UnableToSync(Exception):
     pass
+
+
+class ConfigMapNotFound(Exception):
+    pass
+
+
+class SecretNotFound(Exception):
+    pass
+
+
+class NotValidTarfile(Exception):
+    pass
