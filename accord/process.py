@@ -566,16 +566,6 @@ def handle_arguments():
         action='store_true',
         help='Do not restore the config files to the system. Default is False'
     )
-    parser.add_argument(
-        '--repos-only',
-        required=False,
-        default=False,
-        action='store_true',
-        help=(
-            'Sync and backup repositories only. Requires sync options '
-            'as arguments'
-        )
-    )
     restore_group.add_argument(
         '--start-deployments',
         required=False,
@@ -636,8 +626,9 @@ def main():
         log.info('Adding signal for restore')
         process.add_signal_for_restore()
 
-        log.info('Creating tar archive for backup')
-        process.create_tar_archive()
+        if process.archive:
+            log.info('Creating tar archive for backup')
+            process.create_tar_archive()
 
         # Sync the files if requested
         if process.sync_files:
