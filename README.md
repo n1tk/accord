@@ -47,7 +47,7 @@ All files being backed up are placed in the ``/opt/anaconda_backup`` directory b
 - All Gravity-related files
 - All secrets and config files used in the system (stored in ``[BACKUP_DIRECTORY]/secrets``)
 - The object store, which includes all project data
-- tar.gz file of all of the backup files together to easily move around
+- A ``tar.gz`` file of all of the backup files, to make it easier to move 
 
 You can change the default backup location by passing the ``-d`` or ``--directory`` option to the command, followed by the desired path. If you use a different backup location, make note of it, as you'll refer to it when restoring the files from backup.
 
@@ -97,10 +97,10 @@ If you want to restore again from the same backup files, and the 0 byte ``restor
 accord -a restore --override
 ```
 
-You can also specify a tar.gz file that was created during the backup process, in order to specify a different backup than the latest backup taken.
-
-**NOTE:**  When you specify the file the archive will be extracted into the ``[BACKUP_DIRECTORY]`` and overwrite any files in that location.
+You can also specify the ``tar.gz`` file that was created during the backup process, in order to specify a different backup than the latest backup taken.
 
 ```sh
 accord -a restore --restore-file ae5_backup.tar.gz
 ```
+
+**NOTE:**  When you specify a specific file, the archive will be extracted into the ``[BACKUP_DIRECTORY]`` and overwrite any files in that location.
