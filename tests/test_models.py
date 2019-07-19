@@ -9,7 +9,10 @@ from accord import models
 
 import subprocess
 import logging
+import tarfile
+import shutil
 import mock
+import glob
 import os
 
 
@@ -19,13 +22,18 @@ class TestModels(TestCase):
 
     def tearDown(self):
         logging.disable(logging.NOTSET)
-        temp_files = ['restore', 'accord.log']
+        temp_files = ['restore', 'accord.log', 'test.tar.gz', 'test.txt']
         for tf in temp_files:
             if os.path.isfile(tf):
                 os.remove(tf)
 
         if os.path.exists('anaconda_backup'):
             os.rmdir('anaconda_backup')
+
+        try:
+            shutil.rmtree('testing_tar')
+        except Exception:
+            pass
 
     def setup_args_backup_default(self, repos_only=False, sync=False,
                                   sync_node=None, sync_user='root',
@@ -47,7 +55,8 @@ class TestModels(TestCase):
 
     def setup_args_restore_default(self, override=False, repos_only=False,
                                    no_config=False, start_deployments=False,
-                                   directory='/opt/anaconda_backup'):
+                                   directory='/opt/anaconda_backup',
+                                   restore_file=None):
         class MockArgs(object):
             def __init__(self):
                 self.action = 'restore'
@@ -55,12 +64,36 @@ class TestModels(TestCase):
                 self.no_config = no_config
                 self.override = override
                 self.repos_only = repos_only
+                self.restore_file = restore_file
                 self.start_deployments = start_deployments
 
         return MockArgs()
 
     def setup_temp_restore_file(self, temp_path):
         open(temp_path, 'a').close()
+
+    def setup_valid_tar_archive(self):
+        try:
+            os.mkdir('testing_tar')
+        except Exception:
+            pass
+
+        self.setup_temp_restore_file('testing_tar/test.txt')
+        with tarfile.open('test.tar.gz', 'w:gz') as tar:
+            tar.add(
+                'testing_tar',
+                arcname=os.path.basename('testing_tar')
+            )
+
+        shutil.move('test.tar.gz', 'testing_tar/test.tar.gz')
+
+    def setup_testing_dir(self):
+        try:
+            os.mkdir('testing_tar')
+        except Exception:
+            pass
+
+        self.setup_temp_restore_file('testing_tar/test.txt')
 
     @mock.patch('sh.Command')
     def test_init_class_backup_default(self, Command):
@@ -442,3 +475,102 @@ class TestModels(TestCase):
             test_class.launch_deployment()
         except Exception:
             assert False, "Exception occurred"
+
+    @mock.patch('sh.Command')
+    def test_create_tar_archive_repos(self, Command):
+        self.setup_testing_dir()
+        with mock.patch('accord.models.Accord.setup_backup_directory'):
+            with mock.patch('accord.models.Accord.remove_signal_restore_file'):
+                test_class = models.Accord(self.setup_args_backup_default())
+
+        test_class.backup_directory = 'testing_tar'
+        test_class.repos_only = True
+        test_class.create_tar_archive()
+
+        temp_archive = glob.glob('testing_tar/*.tar.gz')
+        self.assertEquals(len(temp_archive), 1, 'Did not find tar archive')
+        self.assertIn(
+            'repos', temp_archive[0], 'Name of archive not repos'
+        )
+        with tarfile.open(temp_archive[0]) as tar:
+            success = False
+            for f in tar.getmembers():
+                if 'test.txt' in f.name:
+                    success = True
+
+            assert success, 'File not found in archive'
+
+    @mock.patch('sh.Command')
+    def test_create_tar_archive_full(self, Command):
+        self.setup_testing_dir()
+        with mock.patch('accord.models.Accord.setup_backup_directory'):
+            with mock.patch('accord.models.Accord.remove_signal_restore_file'):
+                test_class = models.Accord(self.setup_args_backup_default())
+
+        test_class.backup_directory = 'testing_tar'
+        test_class.create_tar_archive()
+
+        temp_archive = glob.glob('testing_tar/*.tar.gz')
+        self.assertEquals(len(temp_archive), 1, 'Did not find tar archive')
+        self.assertIn(
+            'ae5_backup', temp_archive[0], 'Name of archive not repos'
+        )
+        with tarfile.open(temp_archive[0]) as tar:
+            success = False
+            for f in tar.getmembers():
+                if 'test.txt' in f.name:
+                    success = True
+
+            assert success, 'File not found in archive'
+
+    @mock.patch('sh.Command')
+    def test_create_tar_archive_failure(self, Command):
+        self.setup_testing_dir()
+        with mock.patch('accord.models.Accord.setup_backup_directory'):
+            with mock.patch('accord.models.Accord.remove_signal_restore_file'):
+                test_class = models.Accord(self.setup_args_backup_default())
+
+        test_class.backup_directory = 'testing_tar'
+        self.setup_temp_restore_file('testing_tar/test.tar.gz')
+        with mock.patch('accord.models.tarfile.is_tarfile') as tar:
+            tar.return_value = False
+            try:
+                test_class.create_tar_archive()
+            except exceptions.NotValidTarfile:
+                pass
+            except Exception:
+                assert False, 'Incorrect exception was thrown'
+
+    @mock.patch('sh.Command')
+    def test_extract_tar_archive_success(self, Command):
+        self.setup_valid_tar_archive()
+        os.remove('testing_tar/test.txt')
+        test_class = models.Accord(
+            self.setup_args_restore_default(
+                override=True,
+                restore_file='testing_tar/test.tar.gz',
+                directory='testing_tar'
+            )
+        )
+        test_class.extract_tar_archive()
+        if os.path.isfile('testing_tar/test.txt'):
+            pass
+        else:
+            assert False, 'Did not extract the archive as expected'
+
+    @mock.patch('sh.Command')
+    def test_extract_tar_archive_failure(self, Command):
+        self.setup_temp_restore_file('test.tar.gz')
+        test_class = models.Accord(
+            self.setup_args_restore_default(
+                override=True,
+                restore_file='test.tar.gz'
+            )
+        )
+        try:
+            test_class.extract_tar_archive()
+            assert False, 'Exception should have occured'
+        except exceptions.NotValidTarfile:
+            pass
+        except Exception:
+            assert False, 'Exception was not caught'

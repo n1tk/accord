@@ -60,7 +60,8 @@ class TestProcess(TestCase):
 
     def setup_args_restore_default(self, override=False, repos_only=False,
                                    no_config=False, start_deployments=False,
-                                   directory='/opt/anaconda_backup'):
+                                   directory='/opt/anaconda_backup',
+                                   restore_file=None):
         class MockArgs(object):
             def __init__(self):
                 self.action = 'restore'
@@ -68,6 +69,7 @@ class TestProcess(TestCase):
                 self.no_config = no_config
                 self.override = override
                 self.repos_only = repos_only
+                self.restore_file = restore_file
                 self.start_deployments = start_deployments
 
         return MockArgs()
@@ -107,7 +109,10 @@ class TestProcess(TestCase):
                             with mock.patch(
                                 'accord.process.sanitize_secrets_config_maps'
                             ):
-                                process.main()
+                                with mock.patch(
+                                    'accord.models.Accord.create_tar_archive'
+                                ):
+                                    process.main()
 
         if not os.path.isfile('restore'):
             assert False, 'restore file was not added'
@@ -123,7 +128,8 @@ class TestProcess(TestCase):
                 directory=''
             )
             with mock.patch('accord.process.backup_repository_db'):
-                process.main()
+                with mock.patch('accord.models.Accord.create_tar_archive'):
+                    process.main()
 
         if not os.path.isfile('restore'):
             assert False, 'restore file was not added'
@@ -145,7 +151,10 @@ class TestProcess(TestCase):
                 with mock.patch('accord.process.backup_repository_db'):
                     with mock.patch('accord.process.sync_repositories'):
                         with mock.patch('accord.process.sync_files'):
-                            process.main()
+                            with mock.patch(
+                                'accord.models.Accord.create_tar_archive'
+                            ):
+                                process.main()
 
         if not os.path.isfile('restore'):
             assert False, 'restore file was not added'
@@ -176,6 +185,41 @@ class TestProcess(TestCase):
                                         'accord.process.restart_pods'
                                     ):
                                         process.main()
+
+        if os.path.isfile('restore'):
+            assert False, 'restore file was not cleaned up'
+
+    @mock.patch('sh.Command')
+    def test_main_restore_use_file(self, Command):
+        self.setup_temp_file('restore')
+        with mock.patch(
+            'accord.process.argparse.ArgumentParser.parse_args'
+        ) as args:
+            args.return_value = self.setup_args_restore_default(
+                restore_file='test.tar.gz',
+                no_config=True,
+                directory=''
+            )
+            with mock.patch('accord.models.Accord.extract_tar_archive'):
+                with mock.patch('accord.process.cleanup_sessions_deployments'):
+                    with mock.patch('accord.process.scale_postgres_pod'):
+                        with mock.patch(
+                            'accord.process.cleanup_and_restore_files'
+                        ):
+                            with mock.patch(
+                                'accord.process.scale_postgres_pod'
+                            ):
+                                with mock.patch(
+                                    'accord.process.restore_postgres_database'
+                                ):
+                                    with mock.patch(
+                                        'accord.process.cleanup_'
+                                        'postgres_database'
+                                    ):
+                                        with mock.patch(
+                                            'accord.process.restart_pods'
+                                        ):
+                                            process.main()
 
         if os.path.isfile('restore'):
             assert False, 'restore file was not cleaned up'
@@ -353,8 +397,9 @@ class TestProcess(TestCase):
     @mock.patch('sh.pushd', create=True)
     @mock.patch('sh.tar', create=True)
     @mock.patch('sh.mv', create=True)
+    @mock.patch('sh.cp', create=True)
     @mock.patch('sh.Command')
-    def test_file_backup(self, pushd, tar, mv, Command):
+    def test_file_backup(self, pushd, tar, mv, cp, Command):
         test_class = None
         self.setup_temp_file('test_backup.sql')
         with mock.patch('accord.models.Accord.setup_backup_directory'):
@@ -370,8 +415,9 @@ class TestProcess(TestCase):
     @mock.patch('sh.pushd', create=True)
     @mock.patch('sh.tar', create=True)
     @mock.patch('sh.mv', create=True)
+    @mock.patch('sh.cp', create=True)
     @mock.patch('sh.Command')
-    def test_file_restore(self, pushd, tar, mv, Command):
+    def test_file_restore(self, pushd, tar, mv, cp, Command):
         self.setup_temp_file('test_backup.sql')
         test_class = models.Accord(
             self.setup_args_restore_default(override=True)
@@ -410,7 +456,7 @@ class TestProcess(TestCase):
             assert False, 'Did not create the secret'
 
     @mock.patch('sh.Command')
-    def test_backup_secrets_cm_failure(self, Command):
+    def test_backup_secrets_cm_failure_secret(self, Command):
         test_class = None
         with mock.patch('accord.models.Accord.setup_backup_directory'):
             with mock.patch('accord.models.Accord.remove_signal_restore_file'):
@@ -429,13 +475,51 @@ class TestProcess(TestCase):
             ''.encode('utf-8')
         )
         with mock.patch('accord.models.Accord.get_all_secrets'):
-            process.backup_secrets_config_maps(test_class)
+            try:
+                process.backup_secrets_config_maps(test_class)
+            except exceptions.SecretNotFound:
+                pass
+            except Exception:
+                assert False, 'Exception should have been caught'
 
         if not os.path.exists('secrets'):
             assert False, 'Did not automatically create the directory'
 
         if not os.path.exists('secrets/test-secret.yaml'):
             assert False, 'Did not create the secret'
+
+        if os.path.exists('secrets/test-cm.yaml'):
+            assert False, 'Created the secret when should not have'
+
+    @mock.patch('sh.Command')
+    def test_backup_secrets_cm_failure_configmap(self, Command):
+        test_class = None
+        with mock.patch('accord.models.Accord.setup_backup_directory'):
+            with mock.patch('accord.models.Accord.remove_signal_restore_file'):
+                with mock.patch('accord.models.Accord.test_sync_to_backup'):
+                    test_class = models.Accord(
+                        self.setup_args_backup_default()
+                    )
+
+        test_class.backup_directory = '.'
+        test_class.secret_files = {}
+        test_class.config_maps = {'default': ['test-cm']}
+
+        Command().side_effect = sh.ErrorReturnCode_1(
+            'kubectl',
+            ''.encode('utf-8'),
+            ''.encode('utf-8')
+        )
+        with mock.patch('accord.models.Accord.get_all_secrets'):
+            try:
+                process.backup_secrets_config_maps(test_class)
+            except exceptions.ConfigMapNotFound:
+                pass
+            except Exception:
+                assert False, 'Exception should have been caught'
+
+        if not os.path.exists('secrets'):
+            assert False, 'Did not automatically create the directory'
 
         if not os.path.exists('secrets/test-cm.yaml'):
             assert False, 'Did not create the secret'
