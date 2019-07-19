@@ -774,7 +774,8 @@ class TestProcess(TestCase):
                 self.paths = [
                     'anaconda-enterprise-anaconda-platform.yml',
                     'first.yaml',
-                    'second.yaml'
+                    'second.yaml',
+                    'third.yaml'
                 ]
 
             def __iter__(self):
@@ -782,7 +783,7 @@ class TestProcess(TestCase):
 
             def __next__(self):
                 index = self.index
-                if index > 2:
+                if index > 3:
                     raise StopIteration()
 
                 self.index += 1
@@ -791,8 +792,17 @@ class TestProcess(TestCase):
         Command().side_effect = [
             'REPLACE ERROR: (NotFound)',
             'File created',
-            'REPLACE ERROR: (NotFound)',
-            'CREATE ERROR'
+            sh.ErrorReturnCode_1(
+                'kubectl',
+                ''.encode('utf-8'),
+                ''.encode('utf-8')
+            ),
+            sh.ErrorReturnCode_1(
+                'kubectl',
+                ''.encode('utf-8'),
+                ''.encode('utf-8')
+            ),
+            'file replaced'
         ]
         test_class = models.Accord(
             self.setup_args_restore_default(override=True, no_config=True)

@@ -422,20 +422,24 @@ def restoring_files(process):
             log.info('Skipping platform config due to passed in option')
             continue
 
-        restored = True
-        replace_return = process.kubectl('replace', '-f', restore)
-        if 'replaced' not in replace_return:
-            restored = False
+        restored = False
+        try:
+            replace_return = process.kubectl('replace', '-f', restore)
+            if 'replaced' in replace_return:
+                restored = True
+        except sh.ErrorReturnCode_1:
+            log.info(f'File {restore} was not able to be replaced')
 
         if not restored and 'NotFound' in replace_return:
-            create_return = process.kubectl('create', '-f', restore)
-            if 'created' in create_return:
-                restored = True
+            try:
+                create_return = process.kubectl('create', '-f', restore)
+                if 'created' in create_return:
+                    restored = True
+            except sh.ErrorReturnCode_1:
+                log.info(f'File {restore} was not able to be created')
 
         if restored:
             log.info(f'File {restore} was succefully restored')
-        else:
-            log.error(f'File {restore} was not restored')
 
 
 def restore_repo_db(process):
