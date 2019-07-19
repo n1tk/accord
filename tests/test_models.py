@@ -38,7 +38,8 @@ class TestModels(TestCase):
     def setup_args_backup_default(self, repos_only=False, sync=False,
                                   sync_node=None, sync_user='root',
                                   start_deployments=False,
-                                  directory='/opt/anaconda_backup'):
+                                  directory='/opt/anaconda_backup',
+                                  archive=False):
         class MockArgs(object):
             def __init__(self):
                 self.action = 'backup'
@@ -46,6 +47,7 @@ class TestModels(TestCase):
                 self.no_config = False
                 self.override = False
                 self.repos_only = repos_only
+                self.archive = archive
                 self.start_deployments = start_deployments
                 self.sync = sync
                 self.sync_node = sync_node
@@ -552,7 +554,7 @@ class TestModels(TestCase):
                 directory='testing_tar'
             )
         )
-        test_class.extract_tar_archive()
+        test_class.extract_tar_archive('.')
         if os.path.isfile('testing_tar/test.txt'):
             pass
         else:
@@ -568,7 +570,7 @@ class TestModels(TestCase):
             )
         )
         try:
-            test_class.extract_tar_archive()
+            test_class.extract_tar_archive('.')
             assert False, 'Exception should have occured'
         except exceptions.NotValidTarfile:
             pass

@@ -43,7 +43,8 @@ class TestProcess(TestCase):
     def setup_args_backup_default(self, repos_only=False, sync=False,
                                   sync_node=None, sync_user='root',
                                   start_deployments=False,
-                                  directory='/opt/anaconda_backup'):
+                                  directory='/opt/anaconda_backup',
+                                  archive=False):
         class MockArgs(object):
             def __init__(self):
                 self.action = 'backup'
@@ -51,6 +52,7 @@ class TestProcess(TestCase):
                 self.no_config = False
                 self.override = False
                 self.repos_only = repos_only
+                self.archive = archive
                 self.start_deployments = start_deployments
                 self.sync = sync
                 self.sync_node = sync_node
@@ -98,7 +100,8 @@ class TestProcess(TestCase):
             'accord.process.argparse.ArgumentParser.parse_args'
         ) as args:
             args.return_value = self.setup_args_backup_default(
-                directory=''
+                directory='',
+                archive=True
             )
             with mock.patch('accord.process.backup_postgres_database'):
                 with mock.patch('accord.process.sync_repositories'):
@@ -128,8 +131,7 @@ class TestProcess(TestCase):
                 directory=''
             )
             with mock.patch('accord.process.backup_repository_db'):
-                with mock.patch('accord.models.Accord.create_tar_archive'):
-                    process.main()
+                process.main()
 
         if not os.path.isfile('restore'):
             assert False, 'restore file was not added'
@@ -151,10 +153,7 @@ class TestProcess(TestCase):
                 with mock.patch('accord.process.backup_repository_db'):
                     with mock.patch('accord.process.sync_repositories'):
                         with mock.patch('accord.process.sync_files'):
-                            with mock.patch(
-                                'accord.models.Accord.create_tar_archive'
-                            ):
-                                process.main()
+                            process.main()
 
         if not os.path.isfile('restore'):
             assert False, 'restore file was not added'
@@ -223,6 +222,30 @@ class TestProcess(TestCase):
 
         if os.path.isfile('restore'):
             assert False, 'restore file was not cleaned up'
+
+    @mock.patch('sh.Command')
+    def test_main_restore_use_file_no_restore(self, Command):
+        self.setup_temp_file('restore')
+        with mock.patch(
+            'accord.process.argparse.ArgumentParser.parse_args'
+        ) as args:
+            args.return_value = self.setup_args_restore_default(
+                restore_file='test.tar.gz',
+                no_config=True,
+                directory=''
+            )
+            with mock.patch('accord.models.Accord.extract_tar_archive'):
+                with mock.patch(
+                    'accord.models.Accord.check_for_restore'
+                ) as check:
+                    check.return_value = False
+                    try:
+                        process.main()
+                        assert False, 'Exception should have been thrown'
+                    except exceptions.RestoreSignal:
+                        pass
+                    except Exception:
+                        assert False, 'Did not catch proper exception'
 
     @mock.patch('sh.Command')
     def test_main_restore_start_deployments(self, Command):
