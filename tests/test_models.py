@@ -488,7 +488,7 @@ class TestModels(TestCase):
         test_class.create_tar_archive()
 
         temp_archive = glob.glob('testing_tar/*.tar.gz')
-        self.assertEquals(len(temp_archive), 1, 'Did not find tar archive')
+        self.assertEqual(len(temp_archive), 1, 'Did not find tar archive')
         self.assertIn(
             'repos', temp_archive[0], 'Name of archive not repos'
         )
@@ -511,7 +511,7 @@ class TestModels(TestCase):
         test_class.create_tar_archive()
 
         temp_archive = glob.glob('testing_tar/*.tar.gz')
-        self.assertEquals(len(temp_archive), 1, 'Did not find tar archive')
+        self.assertEqual(len(temp_archive), 1, 'Did not find tar archive')
         self.assertIn(
             'ae5_backup', temp_archive[0], 'Name of archive not repos'
         )
