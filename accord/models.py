@@ -303,13 +303,14 @@ class Accord(object):
                 'tar archive file was not able to create successfully'
             )
 
-    def extract_tar_archive(self):
+    def extract_tar_archive(self, to_directory='/opt'):
         if not tarfile.is_tarfile(self.restore_file):
             raise exceptions.NotValidTarfile(
                 'tar archive file is not a valid tar file'
             )
 
-        sh.tar('xzvf', self.restore_file)
+        # Ensure the backup is extracted to the right place
+        sh.tar('-xzvf', self.restore_file, '-C', to_directory)
 
     def authenticate_api(self):
         pass
