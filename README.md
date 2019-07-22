@@ -50,15 +50,14 @@ All files being backed up are placed in the ``/opt/anaconda_backup`` directory b
 
 You can change the default backup location by passing the ``-d`` or ``--directory`` option to the command, followed by the desired path.
 
-In addition you can also specify to create a tar file of the backup directory by giving the ``--archive`` flag. This will create a tar.gz file in the ``[BACKUP_DIRECTORY]`` that is date and timestamped, and includes all of backed up files and secrets.
+**NOTE:** You must use the same directory for both the backup and restore operations. So, if you specify a different backup directory (e.g., ``/usr/local/backups``), you must use the same directory when performing a restore.
+
+You can also add the ``--archive`` flag to the backup command, to create a .tar file of the backup directory. This will create a timestamped ``.tar.gz`` file in the ``[BACKUP_DIRECTORY]`` that includes all the backed up files and secrets.
 
 ```sh
 accord -a backup --archive
 ```
-
-**Note:** If you chose a different backup directory then you must use the same directory on a restore. For instance if I chose to use /usr/local/backups for the backup, then I would need to use the same directory on the restore.
-
-You can also choose to backup **only** the Anaconda Enterprise repositories that have been mirrored, to move them from one cluster to another. Instead of mirroring on each installed cluster, you can perform the mirror on one AE5 cluster, then backup and restore the repositories across all AE5 clusters in an environment.
+You can also choose to backup **only the Anaconda Enterprise repositories that have been mirrored**, to move them from one cluster to another. Instead of mirroring on each installed cluster, you can perform the mirror on one AE5 cluster, then backup and restore the repositories across all AE5 clusters in an environment.
 
 In this case, include the following options with the ``backup`` command:
 
@@ -72,7 +71,7 @@ Where:
 
 * ``-u`` = The username to use for the sync operation described above. The user must have passwordless ssh setup to successfully sync.
 
-* ``-n`` = The node to sync the repository and database backup to (i.e., the AE5 master node on the target cluster).
+* ``-n`` = The IP address or DNS name of the node to sync the repository and database backup to (i.e., the AE5 master node on the target cluster).
 
 ### Restore
 
@@ -82,15 +81,15 @@ Run the following command to restore the backup files from the default directory
 accord -a restore
 ```
 
-If you specified an alternate directory to store the backup files, specify the location to restore the files from using the ``-d`` or ``--directory`` option, followed by directory that was specified during the backup operation.
+If you specified an alternate directory to store the backup files, specify the location to restore the files from using the ``-d`` or ``--directory`` option, followed by the path to the directory that was specified during the backup operation.
 
-If during the backup you chose to backup only the mirrored repositories, pass the a ``--repos-only`` option to the restore command:
+If you chose to backup only the mirrored repositories, pass the a ``--repos-only`` option to the restore command:
 
 ```sh
 accord -a restore --repos-only
 ```
 
-**NOTE:** During the restore process, the platform configuration file is replaced by the config map that was backed up from the source cluster. To prevent the platform config file from being replaced during the restore, pass a ``--no-config`` option to the command:
+**NOTE:** During the restore process, the platform configuration file is replaced by the config map that was backed up from the source cluster. To prevent the platform config file from being replaced during the restore, pass the ``--no-config`` option to the command:
 
 ```sh
 accord -a restore --no-config
@@ -98,16 +97,16 @@ accord -a restore --no-config
 
 **NOTE:** During the backup process, a 0 byte file named ``restore`` is placed in the backup directory. This file signals that a backup was completed, but has not yet been restored. The restore process checks for the presence of this file before running the restore operation. When the restore process has completed, it removes that file from the backup directory.
 
-If you want to restore again from the same backup files, and the 0 byte ``restore`` file has been removed from the backup directory location, you must pass an ``--override`` flag to run the restore process:
+If you want to restore again from the same backup files, and the 0 byte ``restore`` file was removed from the backup directory location after the inital restore process completed, you must pass an ``--override`` flag to run the restore process again:
 
 ```sh
 accord -a restore --override
 ```
 
-You can also specify the ``tar.gz`` file that was created during the backup process when using the ``--archive`` flag, in order to specify a different backup than the latest backup taken. If you used a different backup location when you took the backup, you will also need to specify that location on the restore.
+You can also restore from a ``.tar.gz`` backup file created by using the ``--archive`` flag, to specify a backup other than the latest backup. If you specified a non-default location when you created the backup, you'll need to specify that same location for the restore.
 
 ```sh
 accord -a restore --restore-file ae5_backup.tar.gz
 ```
 
-**NOTE:**  When you specify a specific file, the archive will be extracted into the ``[BACKUP_DIRECTORY]`` and overwrite any files in that location.
+**CAUTION:**  When you use this method, the archive is extracted into the ``[BACKUP_DIRECTORY]`` and **will overwrite any files in that location**.
