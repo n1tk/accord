@@ -9,7 +9,7 @@ test_requirements = ['mock', 'flake8', 'nose']
 
 setuptools.setup(
     name='accord',
-    version='0.1.1',
+    version='0.1.4',
     url='https://github.com/oldarmyc/accord',
     license='Apache License, Version 2.0',
     author='Dave Kludt',
