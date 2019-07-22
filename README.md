@@ -1,4 +1,4 @@
-[![Travis Status](https://travis-ci.org/oldarmyc/accord.svg?branch=master)](https://travis-ci.org/oldarmyc/accord) &nbsp; [![Anaconda-Server Badge](https://anaconda.org/aeadmin/accord/badges/latest_release_date.svg)](https://anaconda.org/aeadmin/accord) &nbsp; [![Anaconda-Server Badge](https://anaconda.org/aeadmin/accord/badges/version.svg)](https://anaconda.org/aeadmin/accord)
+[![Travis Status](https://travis-ci.org/oldarmyc/accord.svg?branch=master)](https://travis-ci.org/oldarmyc/accord) &nbsp; [![Anaconda-Server Badge](https://anaconda.org/ae5-admin/accord/badges/latest_release_date.svg)](https://anaconda.org/ae5-admin/accord) &nbsp; [![Anaconda-Server Badge](https://anaconda.org/ae5-admin/accord/badges/version.svg)](https://anaconda.org/ae5-admin/accord)
 
 Accord
 ======
