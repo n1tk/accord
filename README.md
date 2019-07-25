@@ -19,7 +19,7 @@ source ~/.bashrc
 # Create profile, and install package
 conda create -n python37 python=3.7 -y
 conda activate python37
-conda install -c aeadmin accord -y
+conda install -c ae5-admin accord -y
 ```
 
 ### Syncing
@@ -110,3 +110,5 @@ accord -a restore --restore-file ae5_backup.tar.gz
 ```
 
 **CAUTION:**  When you use this method, the archive is extracted into the ``[BACKUP_DIRECTORY]`` and **will overwrite any files in that location**.
+
+Package location: https://anaconda.org/ae5-admin/accord
