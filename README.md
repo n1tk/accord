@@ -110,5 +110,3 @@ accord -a restore --restore-file ae5_backup.tar.gz
 ```
 
 **CAUTION:**  When you use this method, the archive is extracted into the ``[BACKUP_DIRECTORY]`` and **will overwrite any files in that location**.
-
-Package location: [https://anaconda.org/ae5-admin/accord](https://anaconda.org/ae5-admin/accord)
