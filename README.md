@@ -9,9 +9,13 @@ To backup the system, you'll need to install the ``accord`` package on the maste
 
 ### Setup conda environment and install accord
 ```sh
-# Get miniconda and install it
+# Using miniconda2: Get miniconda2 and install it
 curl -O https://repo.anaconda.com/miniconda/Miniconda2-4.6.14-Linux-x86_64.sh
 bash Miniconda2-4.6.14-Linux-x86_64.sh  # Accept the license and take the defaults
+
+# Using miniconda3: Get miniconda3 and install it
+curl -O https://repo.anaconda.com/miniconda/Miniconda3-4.6.14-Linux-x86_64.sh
+bash Miniconda3-4.6.14-Linux-x86_64.sh -u # Accept the license and take the defaults
 
 # Source bashrc to pick up conda paths
 source ~/.bashrc
